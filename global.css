@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Gradient backgrounds */
+  .bg-gradient-nature {
+    background: linear-gradient(to bottom right, #f0fdf9, #ccfbef, #e0f2fe);
+  }
+
+  .bg-gradient-nature-dark {
+    background: linear-gradient(to bottom right, #042f2e, #134e4a, #0f172a);
+  }
+
+  .bg-gradient-teal {
+    background: linear-gradient(135deg, #14b8a1, #0d9488);
+  }
+
+  .bg-gradient-accent {
+    background: linear-gradient(135deg, #14b8a1, #2dd4b8);
+  }
+
+  .bg-gradient-warm {
+    background: linear-gradient(135deg, #fde047, #eab308);
+  }
+
+  /* Glass morphism helpers */
+  .glass-light {
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+  }
+
+  .glass-medium {
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(20px);
+  }
+
+  .glass-dark {
+    background-color: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Elevation shadows */
+  .shadow-elevation-1 {
+    shadow-color: #000;
+    shadow-offset: 0px 1px;
+    shadow-opacity: 0.05;
+    shadow-radius: 2px;
+    elevation: 2;
+  }
+
+  .shadow-elevation-2 {
+    shadow-color: #000;
+    shadow-offset: 0px 2px;
+    shadow-opacity: 0.08;
+    shadow-radius: 4px;
+    elevation: 4;
+  }
+
+  .shadow-elevation-3 {
+    shadow-color: #000;
+    shadow-offset: 0px 4px;
+    shadow-opacity: 0.1;
+    shadow-radius: 8px;
+    elevation: 8;
+  }
+
+  .shadow-elevation-4 {
+    shadow-color: #000;
+    shadow-offset: 0px 8px;
+    shadow-opacity: 0.12;
+    shadow-radius: 16px;
+    elevation: 12;
+  }
+
+  /* Glow effects */
+  .shadow-glow {
+    shadow-color: #14b8a1;
+    shadow-offset: 0px 0px;
+    shadow-opacity: 0.3;
+    shadow-radius: 10px;
+  }
+
+  .shadow-glow-lg {
+    shadow-color: #14b8a1;
+    shadow-offset: 0px 0px;
+    shadow-opacity: 0.4;
+    shadow-radius: 20px;
+  }
+}
