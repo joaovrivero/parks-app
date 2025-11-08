@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, memo } from 'react';
 import { TextInput, TouchableOpacity, View, Platform, StyleSheet } from 'react-native';
 
 interface SearchInputProps {
@@ -10,36 +10,44 @@ interface SearchInputProps {
   debounceMs?: number;
 }
 
-export default function SearchInput({
+const SearchInput = memo(function SearchInput({
   value,
   onSearchChange,
   placeholder = 'Search events...',
   debounceMs = 500,
 }: SearchInputProps) {
   const [localValue, setLocalValue] = useState(value);
+  const onSearchChangeRef = useRef(onSearchChange);
+
+  // Keep the ref updated
+  useEffect(() => {
+    onSearchChangeRef.current = onSearchChange;
+  }, [onSearchChange]);
 
   // Debounce the search input
   useEffect(() => {
     const timer = setTimeout(() => {
-      onSearchChange(localValue);
+      onSearchChangeRef.current(localValue);
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [localValue, onSearchChange, debounceMs]);
+  }, [localValue, debounceMs]);
 
-  // Update local value when external value changes
+  // Update local value when external value changes (only if different and not from user input)
   useEffect(() => {
-    setLocalValue(value);
+    if (value !== localValue) {
+      setLocalValue(value);
+    }
   }, [value]);
 
   const handleClear = () => {
     setLocalValue('');
-    onSearchChange('');
+    onSearchChangeRef.current('');
   };
 
-  const SearchContent = () => (
+  const searchContent = (
     <View className="flex-row items-center px-4 py-3">
-      <Ionicons name="search" size={20} color="#14b8a1" />
+      <Ionicons name="search" size={20} color="#1DDD96" />
 
       <TextInput
         value={localValue}
@@ -50,6 +58,7 @@ export default function SearchInput({
         returnKeyType="search"
         autoCapitalize="none"
         autoCorrect={false}
+        blurOnSubmit={false}
       />
 
       {localValue.length > 0 && (
@@ -64,9 +73,9 @@ export default function SearchInput({
   if (Platform.OS === 'web') {
     return (
       <View
-        className="mx-4 mb-3 overflow-hidden rounded-3xl border border-white/30 bg-white/70"
+        className="mx-4 mb-3 overflow-hidden rounded-3xl border-2 border-dark-200/60 bg-white/80"
         style={styles.webGlass}>
-        <SearchContent />
+        {searchContent}
       </View>
     );
   }
@@ -75,14 +84,14 @@ export default function SearchInput({
   return (
     <View className="mx-4 mb-3" style={styles.container}>
       <BlurView
-        intensity={20}
+        intensity={30}
         tint="light"
-        className="overflow-hidden rounded-3xl border border-white/30">
-        <SearchContent />
+        className="overflow-hidden rounded-3xl border-2 border-dark-200/60 bg-white/10">
+        {searchContent}
       </BlurView>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -100,3 +109,5 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
 });
+
+export default SearchInput;

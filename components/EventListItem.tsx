@@ -3,29 +3,18 @@ import dayjs from 'dayjs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import { MotiView } from 'moti';
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 
 import AnimatedPressable from './AnimatedPressable';
 import SupaImage from './SupaImage';
 
-import { supabase } from '~/utils/supabase';
+interface EventListItemProps {
+  event: any;
+  index?: number;
+  attendeeCount?: number;
+}
 
-export default function EventListItem({ event, index = 0 }) {
-  const [numberOfAttendees, setNumberOfAttendees] = useState(0);
-
-  useEffect(() => {
-    fetchNumberOfAttendees();
-  }, [event.id]);
-
-  const fetchNumberOfAttendees = async () => {
-    const { count } = await supabase
-      .from('attendance')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_id', event.id);
-
-    setNumberOfAttendees(count);
-  };
+export default function EventListItem({ event, index = 0, attendeeCount = 0 }: EventListItemProps) {
 
   return (
     <MotiView
@@ -37,7 +26,7 @@ export default function EventListItem({ event, index = 0 }) {
         delay: index * 100,
       }}>
       <Link href={`/event/${event.id}`} asChild>
-        <AnimatedPressable className="mx-4 mb-4">
+        <AnimatedPressable style={{ marginBottom: 32 }}>
           <View className="overflow-hidden rounded-3xl bg-white" style={styles.card}>
             {/* Image with gradient overlay */}
             <View className="relative h-48 overflow-hidden">
@@ -63,6 +52,15 @@ export default function EventListItem({ event, index = 0 }) {
                   </Text>
                 </View>
               </View>
+
+              {/* Women Only badge */}
+              {event.women_only && (
+                <View className="absolute right-4 top-4">
+                  <View className="rounded-full bg-pink-500/90 px-3 py-1.5">
+                    <Text className="text-xs font-bold text-white">Exclusivo para Mulheres</Text>
+                  </View>
+                </View>
+              )}
 
               {/* Time in bottom corner */}
               <View className="absolute bottom-3 right-3">
@@ -90,9 +88,11 @@ export default function EventListItem({ event, index = 0 }) {
               {/* Footer */}
               <View className="flex-row items-center justify-between border-t border-dark-100 pt-3">
                 <View className="flex-row items-center gap-2">
-                  <Feather name="users" size={16} color="#14b8a1" />
+                  <Feather name="users" size={16} color="#1DDD96" />
                   <Text className="text-sm font-semibold text-dark-700">
-                    {numberOfAttendees} going
+                    {event.max_capacity
+                      ? `${attendeeCount}/${event.max_capacity} vagas`
+                      : `${attendeeCount} confirmados • Ilimitado`}
                   </Text>
                 </View>
 

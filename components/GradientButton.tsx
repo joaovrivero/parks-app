@@ -14,9 +14,9 @@ type GradientButtonProps = {
 };
 
 const gradientColors = {
-  teal: ['#14b8a1', '#0d9488'],
-  accent: ['#14b8a1', '#2dd4b8'],
-  warm: ['#fde047', '#eab308'],
+  teal: ['#1DDD96', '#35B385'],
+  accent: ['#1DDD96', '#35B385'],
+  warm: ['#1DDD96', '#35B385'],
 };
 
 export default function GradientButton({

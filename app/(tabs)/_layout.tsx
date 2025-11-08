@@ -16,11 +16,11 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#14b8a1',
-        tabBarInactiveTintColor: '#94a3b8',
+        tabBarActiveTintColor: '#1DDD96',
+        tabBarInactiveTintColor: '#cbd5e1',
         tabBarStyle: {
           position: 'absolute',
-          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(41, 52, 48, 0.95)',
           borderTopWidth: 0,
           height: 85,
           paddingBottom: 24,
@@ -28,7 +28,7 @@ export default function TabLayout() {
           elevation: 0,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
+          shadowOpacity: 0.3,
           shadowRadius: 12,
         },
         tabBarLabelStyle: {
@@ -39,8 +39,8 @@ export default function TabLayout() {
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
             <BlurView
-              intensity={80}
-              tint="light"
+              intensity={90}
+              tint="dark"
               style={{
                 ...StyleSheet.absoluteFillObject,
                 overflow: 'hidden',

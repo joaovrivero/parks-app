@@ -99,7 +99,7 @@ export default function AddressAutocomplete({ onSelected }) {
         {suggestions.map((item) => (
           <Pressable
             onPress={() => onSuggestionClick(item)}
-            key={item.name}
+            key={item.mapbox_id}
             className="rounded border border-gray-300 p-2">
             <Text className="font-bold">{item.name}</Text>
             <Text>{item.place_formatted}</Text>

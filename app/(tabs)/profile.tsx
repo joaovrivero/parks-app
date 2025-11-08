@@ -1,6 +1,7 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Button, Pressable, TextInput, View, Text, ScrollView } from 'react-native';
+import { Alert, Button, Pressable, TextInput, View, Text, ScrollView, StyleSheet } from 'react-native';
 
 import Avatar from '~/components/Avatar';
 import { useAuth } from '~/contexts/AuthProvider';
@@ -68,17 +69,13 @@ export default function Profile() {
         updated_at: new Date(),
       };
 
-      console.log('Updating profile with:', updates);
-
       const { data, error } = await supabase.from('profiles').upsert(updates).select();
 
       if (error) {
-        console.error('Profile update error:', error);
         throw error;
       }
 
-      console.log('Profile updated successfully:', data);
-      Alert.alert('Success', 'Profile updated successfully!');
+      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
     } catch (error) {
       if (error instanceof Error) {
         Alert.alert(error.message);
@@ -89,10 +86,15 @@ export default function Profile() {
   }
 
   return (
-    <View className="flex-1 bg-dark-50">
-      <Stack.Screen options={{ title: 'Profile', headerTitleStyle: { fontWeight: '600' } }} />
+    <View className="flex-1">
+      <Stack.Screen options={{ title: 'Perfil', headerShown: false }} />
 
-      <ScrollView className="flex-1" contentContainerClassName="p-6">
+      <LinearGradient
+        colors={['#e6faf3', '#b3f0d9', '#f8fafc']}
+        style={styles.container}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}>
+        <ScrollView className="flex-1" contentContainerClassName="p-6" contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }}>
         {/* Profile Header Card */}
         <View className="mb-6 items-center rounded-2xl bg-white p-6 shadow-sm">
           <Avatar
@@ -105,7 +107,7 @@ export default function Profile() {
           />
           <View className="mt-4 items-center">
             <Text className="text-xl font-bold text-dark-800">
-              {fullName || username || 'Your Name'}
+              {fullName || username || 'Seu Nome'}
             </Text>
             <Text className="text-dark-500">{session?.user?.email}</Text>
           </View>
@@ -113,7 +115,7 @@ export default function Profile() {
 
         {/* Personal Information Card */}
         <View className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
-          <Text className="mb-4 text-lg font-semibold text-dark-800">Personal Information</Text>
+          <Text className="mb-4 text-lg font-semibold text-dark-800">Informações Pessoais</Text>
 
           <View className="gap-4">
             <View>
@@ -128,22 +130,22 @@ export default function Profile() {
             </View>
 
             <View>
-              <Text className="mb-2 text-sm font-medium text-dark-700">Full Name</Text>
+              <Text className="mb-2 text-sm font-medium text-dark-700">Nome Completo</Text>
               <TextInput
                 onChangeText={(text) => setFullName(text)}
                 value={fullName}
-                placeholder="Enter your full name"
+                placeholder="Digite seu nome completo"
                 autoCapitalize="words"
                 className="rounded-xl border border-dark-200 bg-white p-4 text-dark-800 focus:border-brand-500"
               />
             </View>
 
             <View>
-              <Text className="mb-2 text-sm font-medium text-dark-700">Username</Text>
+              <Text className="mb-2 text-sm font-medium text-dark-700">Nome de Usuário</Text>
               <TextInput
                 onChangeText={(text) => setUsername(text)}
                 value={username}
-                placeholder="Choose a username"
+                placeholder="Escolha um nome de usuário"
                 autoCapitalize="none"
                 className="rounded-xl border border-dark-200 bg-white p-4 text-dark-800 focus:border-brand-500"
               />
@@ -158,17 +160,24 @@ export default function Profile() {
             disabled={loading}
             className="items-center rounded-xl bg-brand-500 p-4 shadow-md disabled:opacity-50">
             <Text className="text-lg font-semibold text-white">
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? 'Salvando...' : 'Salvar Alterações'}
             </Text>
           </Pressable>
 
           <Pressable
             onPress={() => supabase.auth.signOut()}
             className="items-center rounded-xl border-2 border-dark-300 bg-white p-4">
-            <Text className="text-lg font-semibold text-dark-700">Sign Out</Text>
+            <Text className="text-lg font-semibold text-dark-700">Sair</Text>
           </Pressable>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

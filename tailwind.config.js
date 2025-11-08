@@ -7,17 +7,17 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          50: '#f0fdf9',
-          100: '#ccfbef',
-          200: '#99f6e0',
-          300: '#5fe9ce',
-          400: '#2dd4b8',
-          500: '#14b8a1', // Primary accent - teal
-          600: '#0d9488',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
-          950: '#042f2e',
+          50: '#e6faf3',
+          100: '#b3f0d9',
+          200: '#80e6bf',
+          300: '#4ddca5',
+          400: '#35B385',
+          500: '#1DDD96', // Primary accent - main green
+          600: '#3F896E',
+          700: '#3B5E52',
+          800: '#293430',
+          900: '#1f2826',
+          950: '#151c1a',
         },
         accent: {
           50: '#fefce8',
@@ -58,8 +58,8 @@ module.exports = {
       boxShadow: {
         'soft': '0 2px 15px rgba(0, 0, 0, 0.08)',
         'soft-lg': '0 10px 40px rgba(0, 0, 0, 0.12)',
-        'glow': '0 0 20px rgba(20, 184, 161, 0.3)',
-        'glow-lg': '0 0 40px rgba(20, 184, 161, 0.4)',
+        'glow': '0 0 20px rgba(29, 221, 150, 0.3)',
+        'glow-lg': '0 0 40px rgba(29, 221, 150, 0.4)',
       },
       elevation: {
         1: {

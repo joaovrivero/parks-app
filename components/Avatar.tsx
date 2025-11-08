@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { MotiView } from 'moti';
 import { useState } from 'react';
-import { StyleSheet, View, Alert, Image, ActivityIndicator, Text } from 'react-native';
+import { StyleSheet, View, Alert, ActivityIndicator, Text } from 'react-native';
 
-import AnimatedPressable from './AnimatedPressable';
 import GradientButton from './GradientButton';
 
 import { supabase } from '~/utils/supabase';
@@ -15,38 +15,18 @@ interface Props {
   onUpload: (filePath: string) => void;
 }
 
-const downloadImage = async (path: string): Promise<string> => {
-  const { data, error } = await supabase.storage.from('avatars').download(path);
-
-  if (error) {
-    throw new Error(`Failed to download avatar: ${error.message}`);
-  }
-
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.readAsDataURL(data);
-    fr.onload = () => resolve(fr.result as string);
-    fr.onerror = () => reject(new Error('Failed to read avatar data'));
-  });
+const getPublicUrl = (path: string): string => {
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+  return data.publicUrl;
 };
 
 export default function Avatar({ url, size = 150, onUpload }: Props) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const queryClient = useQueryClient();
   const avatarSize = { height: size, width: size };
 
-  const {
-    data: avatarUrl,
-    isLoading: isDownloading,
-    isError,
-  } = useQuery({
-    queryKey: ['avatar', url],
-    queryFn: () => downloadImage(url!),
-    enabled: !!url,
-    staleTime: 1000 * 60 * 60, // 1 hour
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours
-    retry: 2,
-  });
+  const avatarUrl = url ? getPublicUrl(url) : null;
 
   const uploadMutation = useMutation({
     mutationFn: async (): Promise<string> => {
@@ -92,8 +72,6 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
     },
   });
 
-  const showLoadingState = isDownloading || !avatarUrl || !imageLoaded;
-
   return (
     <View className="items-center gap-4">
       <MotiView
@@ -101,27 +79,27 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', damping: 15 }}>
         <View style={[avatarSize, styles.avatarContainer]}>
-          {avatarUrl && !isError ? (
+          {avatarUrl && !imageError ? (
             <>
               <Image
                 source={{ uri: avatarUrl }}
                 accessibilityLabel="Avatar"
-                style={[avatarSize, styles.avatar, styles.image]}
+                style={[avatarSize, styles.avatar]}
                 onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+                transition={200}
+                contentFit="cover"
+                cachePolicy="memory-disk"
               />
-              {showLoadingState && (
+              {!imageLoaded && (
                 <View style={[avatarSize, styles.avatar, styles.noImage, styles.loadingOverlay]}>
-                  <ActivityIndicator size="small" color="#14b8a1" />
+                  <ActivityIndicator size="small" color="#1DDD96" />
                 </View>
               )}
             </>
           ) : (
             <View style={[avatarSize, styles.avatar, styles.noImage]}>
-              {isDownloading ? (
-                <ActivityIndicator size="small" color="#14b8a1" />
-              ) : (
-                <Text className="text-4xl">📸</Text>
-              )}
+              <Text className="text-4xl">📸</Text>
             </View>
           )}
         </View>
@@ -140,7 +118,7 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
 
 const styles = StyleSheet.create({
   avatarContainer: {
-    shadowColor: '#14b8a1',
+    shadowColor: '#1DDD96',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -152,9 +130,6 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
     borderWidth: 4,
     borderColor: 'rgba(255, 255, 255, 0.9)',
-  },
-  image: {
-    objectFit: 'cover',
   },
   noImage: {
     backgroundColor: '#e2e8f0',

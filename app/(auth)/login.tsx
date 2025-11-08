@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
-import { Alert, View, AppState, TextInput, StyleSheet } from 'react-native';
+import { Alert, View, AppState, TextInput, StyleSheet, Image } from 'react-native';
 import { Text } from 'react-native';
 
 import AnimatedPressable from '~/components/AnimatedPressable';
@@ -40,11 +40,11 @@ export default function Auth() {
 
   return (
     <LinearGradient
-      colors={['#f0fdf9', '#ccfbef', '#e0f2fe']}
+      colors={['#ffffff', '#f8f9fa', '#f1f3f5']}
       style={styles.container}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}>
-      <Stack.Screen options={{ title: 'Sign in', headerShown: false }} />
+      <Stack.Screen options={{ title: 'Entrar', headerShown: false }} />
 
       <View className="flex-1 justify-center px-6">
         {/* Header Section */}
@@ -57,13 +57,17 @@ export default function Auth() {
             from={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', delay: 200, damping: 12 }}
-            className="mb-6 h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600"
+            className="mb-6"
             style={styles.logoShadow}>
-            <Text className="text-4xl">🏕️</Text>
+            <Image
+              source={require('~/assets/parkslogo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </MotiView>
-          <Text className="mb-3 text-4xl font-bold text-dark-900">Welcome Back</Text>
+          <Text className="mb-3 text-4xl font-bold text-dark-900">Bem-vindo de Volta</Text>
           <Text className="text-center text-base text-dark-600">
-            Sign in to discover amazing outdoor events
+            Entre para descobrir eventos incríveis ao ar livre
           </Text>
         </MotiView>
 
@@ -76,11 +80,11 @@ export default function Auth() {
           style={styles.card}>
           <View className="gap-5 p-6">
             <View>
-              <Text className="mb-2 text-sm font-bold text-dark-700">Email Address</Text>
+              <Text className="mb-2 text-sm font-bold text-dark-700">Endereço de Email</Text>
               <TextInput
                 onChangeText={(text) => setEmail(text)}
                 value={email}
-                placeholder="you@example.com"
+                placeholder="voce@exemplo.com"
                 placeholderTextColor="#94a3b8"
                 autoCapitalize="none"
                 keyboardType="email-address"
@@ -89,7 +93,7 @@ export default function Auth() {
             </View>
 
             <View>
-              <Text className="mb-2 text-sm font-bold text-dark-700">Password</Text>
+              <Text className="mb-2 text-sm font-bold text-dark-700">Senha</Text>
               <TextInput
                 onChangeText={(text) => setPassword(text)}
                 value={password}
@@ -103,7 +107,7 @@ export default function Auth() {
 
             <View className="mt-2">
               <GradientButton
-                title={loading ? 'Signing in...' : 'Sign In'}
+                title={loading ? 'Entrando...' : 'Entrar'}
                 onPress={() => signInWithEmail()}
                 disabled={loading}
                 variant="teal"
@@ -120,12 +124,12 @@ export default function Auth() {
           animate={{ opacity: 1 }}
           transition={{ delay: 500 }}
           className="items-center">
-          <Text className="mb-3 text-base text-dark-700">Don't have an account?</Text>
+          <Text className="mb-3 text-base text-dark-700">Não tem uma conta?</Text>
           <AnimatedPressable
             onPress={() => router.push('/(auth)/signup')}
             disabled={loading}
             className="rounded-2xl bg-white/80 px-8 py-3">
-            <Text className="text-base font-bold text-brand-600">Create Account</Text>
+            <Text className="text-base font-bold text-brand-600">Criar Conta</Text>
           </AnimatedPressable>
         </MotiView>
       </View>
@@ -137,8 +141,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  logo: {
+    width: 200,
+    height: 80,
+  },
   logoShadow: {
-    shadowColor: '#14b8a1',
+    shadowColor: '#1DDD96',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,

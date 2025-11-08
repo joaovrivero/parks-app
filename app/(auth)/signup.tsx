@@ -1,7 +1,11 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
+import { MotiView } from 'moti';
 import React, { useState } from 'react';
-import { Alert, View, TextInput, Pressable, Text } from 'react-native';
+import { Alert, View, TextInput, StyleSheet, Text } from 'react-native';
 
+import AnimatedPressable from '~/components/AnimatedPressable';
+import GradientButton from '~/components/GradientButton';
 import { supabase } from '~/utils/supabase';
 
 export default function Signup() {
@@ -21,73 +25,122 @@ export default function Signup() {
     });
 
     if (error) Alert.alert(error.message);
-    if (!session) Alert.alert('Please check your inbox for email verification!');
+    if (!session) Alert.alert('Por favor, verifique sua caixa de entrada para verificação de email!');
     setLoading(false);
   }
 
   return (
-    <View className="flex-1 bg-gradient-to-br from-brand-50 to-brand-100">
-      <Stack.Screen options={{ title: 'Sign up', headerShown: false }} />
+    <LinearGradient
+      colors={['#f0fdf9', '#ccfbef', '#e0f2fe']}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}>
+      <Stack.Screen options={{ title: 'Cadastrar', headerShown: false }} />
 
       <View className="flex-1 justify-center px-6">
         {/* Header Section */}
-        <View className="mb-12 items-center">
-          <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-brand-500">
-            <Text className="text-2xl font-bold text-white">🌳</Text>
-          </View>
-          <Text className="mb-2 text-3xl font-bold text-dark-800">Join the Community</Text>
-          <Text className="text-center text-dark-600">
-            Create your account to start discovering local park events
+        <MotiView
+          from={{ opacity: 0, translateY: -30 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'spring', delay: 100 }}
+          className="mb-12 items-center">
+          <MotiView
+            from={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', delay: 200, damping: 12 }}
+            className="mb-6 h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600"
+            style={styles.logoShadow}>
+            <Text className="text-4xl">🌳</Text>
+          </MotiView>
+          <Text className="mb-3 text-4xl font-bold text-dark-900">Junte-se à Comunidade</Text>
+          <Text className="text-center text-base text-dark-600">
+            Crie sua conta para começar a descobrir eventos incríveis ao ar livre
           </Text>
-        </View>
+        </MotiView>
 
         {/* Signup Card */}
-        <View className="rounded-2xl bg-white p-6 shadow-lg">
-          <View className="gap-4">
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', delay: 300 }}
+          className="mb-6 overflow-hidden rounded-3xl bg-white"
+          style={styles.card}>
+          <View className="gap-5 p-6">
             <View>
-              <Text className="mb-2 text-sm font-medium text-dark-700">Email</Text>
+              <Text className="mb-2 text-sm font-bold text-dark-700">Endereço de Email</Text>
               <TextInput
                 onChangeText={(text) => setEmail(text)}
                 value={email}
-                placeholder="Enter your email"
+                placeholder="voce@exemplo.com"
+                placeholderTextColor="#94a3b8"
                 autoCapitalize="none"
                 keyboardType="email-address"
-                className="rounded-xl border border-dark-200 bg-dark-50 p-4 text-dark-800 focus:border-brand-500"
+                className="rounded-2xl border-2 border-dark-200 bg-dark-50 p-4 text-base text-dark-900 focus:border-brand-500"
               />
             </View>
 
             <View>
-              <Text className="mb-2 text-sm font-medium text-dark-700">Password</Text>
+              <Text className="mb-2 text-sm font-bold text-dark-700">Senha</Text>
               <TextInput
                 onChangeText={(text) => setPassword(text)}
                 value={password}
                 secureTextEntry
-                placeholder="Create a password"
+                placeholder="••••••••"
+                placeholderTextColor="#94a3b8"
                 autoCapitalize="none"
-                className="rounded-xl border border-dark-200 bg-dark-50 p-4 text-dark-800 focus:border-brand-500"
+                className="rounded-2xl border-2 border-dark-200 bg-dark-50 p-4 text-base text-dark-900 focus:border-brand-500"
               />
-              <Text className="mt-1 text-xs text-dark-500">Minimum 6 characters</Text>
+              <Text className="mt-2 text-xs text-dark-500">Mínimo 6 caracteres</Text>
             </View>
 
-            <Pressable
-              onPress={() => signUpWithEmail()}
-              disabled={loading}
-              className="mt-4 items-center rounded-xl bg-brand-500 p-4 shadow-md disabled:opacity-50">
-              <Text className="text-lg font-semibold text-white">
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </Text>
-            </Pressable>
+            <View className="mt-2">
+              <GradientButton
+                title={loading ? 'Criando Conta...' : 'Criar Conta'}
+                onPress={() => signUpWithEmail()}
+                disabled={loading}
+                variant="teal"
+                size="lg"
+                className="w-full"
+              />
+            </View>
           </View>
-        </View>
+        </MotiView>
 
         {/* Sign In Link */}
-        <View className="mt-6 items-center">
-          <Text className="text-dark-600">Already have an account?</Text>
-          <Pressable onPress={() => router.back()} disabled={loading} className="mt-2">
-            <Text className="font-semibold text-brand-600">Sign In</Text>
-          </Pressable>
-        </View>
+        <MotiView
+          from={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 500 }}
+          className="items-center">
+          <Text className="mb-3 text-base text-dark-700">Já tem uma conta?</Text>
+          <AnimatedPressable
+            onPress={() => router.back()}
+            disabled={loading}
+            className="rounded-2xl bg-white/80 px-8 py-3">
+            <Text className="text-base font-bold text-brand-600">Entrar</Text>
+          </AnimatedPressable>
+        </MotiView>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  logoShadow: {
+    shadowColor: '#1DDD96',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  card: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+});

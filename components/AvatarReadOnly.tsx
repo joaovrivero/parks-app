@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { Image } from 'expo-image';
 import { useState } from 'react';
-import { StyleSheet, View, Image, ActivityIndicator, Text } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 
 import { supabase } from '~/utils/supabase';
 
@@ -10,51 +10,33 @@ interface Props {
   fallbackText?: string | null;
 }
 
-const downloadImage = async (path: string): Promise<string> => {
-  const { data, error } = await supabase.storage.from('avatars').download(path);
-
-  if (error) {
-    throw new Error(`Failed to download avatar: ${error.message}`);
-  }
-
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.readAsDataURL(data);
-    fr.onload = () => resolve(fr.result as string);
-    fr.onerror = () => reject(new Error('Failed to read avatar data'));
-  });
+const getPublicUrl = (path: string): string => {
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+  return data.publicUrl;
 };
 
 export default function AvatarReadOnly({ url, size = 40, fallbackText }: Props) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const avatarSize = { height: size, width: size };
 
-  const {
-    data: avatarUrl,
-    isLoading: isDownloading,
-    isError,
-  } = useQuery({
-    queryKey: ['avatar', url],
-    queryFn: () => downloadImage(url!),
-    enabled: !!url,
-    staleTime: 1000 * 30, // 30 seconds - refetch more often for updated avatars
-    gcTime: 1000 * 60 * 5, // 5 minutes
-    retry: 2,
-  });
-
-  const showLoadingState = isDownloading || !avatarUrl || !imageLoaded;
+  const avatarUrl = url ? getPublicUrl(url) : null;
 
   return (
     <View style={[avatarSize, styles.avatar]}>
-      {avatarUrl && !isError ? (
+      {avatarUrl && !imageError ? (
         <>
           <Image
             source={{ uri: avatarUrl }}
             accessibilityLabel="Avatar"
-            style={[avatarSize, styles.avatar, styles.image]}
+            style={[avatarSize, styles.avatar]}
             onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+            transition={200}
+            contentFit="cover"
+            cachePolicy="memory-disk"
           />
-          {showLoadingState && (
+          {!imageLoaded && (
             <View style={[avatarSize, styles.avatar, styles.noImage, styles.loadingOverlay]}>
               <ActivityIndicator size="small" color="#666" />
             </View>
@@ -62,13 +44,7 @@ export default function AvatarReadOnly({ url, size = 40, fallbackText }: Props) 
         </>
       ) : (
         <View style={[avatarSize, styles.avatar, styles.noImage]}>
-          {isDownloading ? (
-            <ActivityIndicator size="small" color="#666" />
-          ) : (
-            <Text style={styles.fallbackText}>
-              {fallbackText?.[0]?.toUpperCase() || '?'}
-            </Text>
-          )}
+          <Text style={styles.fallbackText}>{fallbackText?.[0]?.toUpperCase() || '?'}</Text>
         </View>
       )}
     </View>
@@ -80,10 +56,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     maxWidth: '100%',
-  },
-  image: {
-    objectFit: 'cover',
-    paddingTop: 0,
   },
   noImage: {
     backgroundColor: '#e5e7eb',

@@ -70,6 +70,7 @@ export type Database = {
           created_at: string;
           event_id: number;
           id: number;
+          image_url: string | null;
           user_id: string;
         };
         Insert: {
@@ -77,6 +78,7 @@ export type Database = {
           created_at?: string;
           event_id: number;
           id?: number;
+          image_url?: string | null;
           user_id: string;
         };
         Update: {
@@ -84,6 +86,7 @@ export type Database = {
           created_at?: string;
           event_id?: number;
           id?: number;
+          image_url?: string | null;
           user_id?: string;
         };
         Relationships: [
@@ -112,8 +115,10 @@ export type Database = {
           image_uri: string | null;
           location: string | null;
           location_point: unknown | null;
+          max_capacity: number | null;
           title: string;
           user_id: string | null;
+          women_only: boolean | null;
         };
         Insert: {
           created_at?: string;
@@ -123,8 +128,10 @@ export type Database = {
           image_uri?: string | null;
           location?: string | null;
           location_point?: unknown | null;
+          max_capacity?: number | null;
           title: string;
           user_id?: string | null;
+          women_only?: boolean | null;
         };
         Update: {
           created_at?: string;
@@ -134,8 +141,10 @@ export type Database = {
           image_uri?: string | null;
           location?: string | null;
           location_point?: unknown | null;
+          max_capacity?: number | null;
           title?: string;
           user_id?: string | null;
+          women_only?: boolean | null;
         };
         Relationships: [
           {
@@ -201,9 +210,11 @@ export type Database = {
           location: string;
           image_uri: string;
           user_id: string;
-          lat: number;
-          long: number;
+          event_lat: number;
+          event_long: number;
           dist_meters: number;
+          max_capacity: number | null;
+          women_only: boolean | null;
         }[];
       };
       nearby_events_with_filters: {
@@ -225,9 +236,11 @@ export type Database = {
           location: string;
           image_uri: string;
           user_id: string;
-          lat: number;
-          long: number;
+          event_lat: number;
+          event_long: number;
           dist_meters: number;
+          max_capacity: number | null;
+          women_only: boolean | null;
         }[];
       };
     };

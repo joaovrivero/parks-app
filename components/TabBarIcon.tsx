@@ -12,7 +12,7 @@ export const TabBarIcon = (props: {
   return (
     <MotiView
       animate={{
-        scale: props.color === '#14b8a1' ? 1 : 1,
+        scale: props.color === '#1DDD96' ? 1 : 1,
       }}
       transition={{
         type: 'spring',

@@ -38,7 +38,7 @@ export const Button = forwardRef<View, ButtonProps>(
           disabled={disabled}
           className={`overflow-hidden rounded-3xl ${disabled ? 'opacity-50' : ''} ${className}`}>
           <LinearGradient
-            colors={['#14b8a1', '#0d9488']}
+            colors={['#1DDD96', '#35B385']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradientShadow}

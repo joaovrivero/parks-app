@@ -5,23 +5,23 @@
 @layer utilities {
   /* Gradient backgrounds */
   .bg-gradient-nature {
-    background: linear-gradient(to bottom right, #f0fdf9, #ccfbef, #e0f2fe);
+    background: linear-gradient(to bottom right, #1DDD96, #35B385, #3F896E);
   }
 
   .bg-gradient-nature-dark {
-    background: linear-gradient(to bottom right, #042f2e, #134e4a, #0f172a);
+    background: linear-gradient(to bottom right, #293430, #3B5E52, #3F896E);
   }
 
   .bg-gradient-teal {
-    background: linear-gradient(135deg, #14b8a1, #0d9488);
+    background: linear-gradient(135deg, #1DDD96, #35B385);
   }
 
   .bg-gradient-accent {
-    background: linear-gradient(135deg, #14b8a1, #2dd4b8);
+    background: linear-gradient(135deg, #1DDD96, #35B385);
   }
 
   .bg-gradient-warm {
-    background: linear-gradient(135deg, #fde047, #eab308);
+    background: linear-gradient(135deg, #1DDD96, #35B385);
   }
 
   /* Glass morphism helpers */
@@ -75,14 +75,14 @@
 
   /* Glow effects */
   .shadow-glow {
-    shadow-color: #14b8a1;
+    shadow-color: #1DDD96;
     shadow-offset: 0px 0px;
     shadow-opacity: 0.3;
     shadow-radius: 10px;
   }
 
   .shadow-glow-lg {
-    shadow-color: #14b8a1;
+    shadow-color: #1DDD96;
     shadow-offset: 0px 0px;
     shadow-opacity: 0.4;
     shadow-radius: 20px;

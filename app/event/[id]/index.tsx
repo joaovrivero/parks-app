@@ -4,7 +4,8 @@ import dayjs from 'dayjs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, Stack, Link } from 'expo-router';
 import { MotiView } from 'moti';
-import { Text, View, ActivityIndicator, ScrollView, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { Text, View, ActivityIndicator, ScrollView, StyleSheet, Alert } from 'react-native';
 
 import CommentSection from '~/components/CommentSection';
 import GradientButton from '~/components/GradientButton';
@@ -32,6 +33,16 @@ const fetchAttendance = async (eventId: string, userId: string): Promise<Attenda
     throw new Error(`Failed to fetch attendance: ${error.message}`);
   }
   return data;
+};
+
+const fetchAttendeeCount = async (eventId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('attendance')
+    .select('*', { count: 'exact', head: true })
+    .eq('event_id', eventId);
+
+  if (error) throw new Error(`Failed to fetch attendee count: ${error.message}`);
+  return count || 0;
 };
 
 export default function EventPage() {
@@ -63,30 +74,96 @@ export default function EventPage() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  const { data: attendeeCount = 0 } = useQuery({
+    queryKey: ['attendeeCount', eventId],
+    queryFn: () => fetchAttendeeCount(eventId),
+    enabled: !!eventId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
   const joinEventMutation = useMutation({
     mutationFn: async () => {
+      // Check if event is at capacity
+      if (event!.max_capacity && attendeeCount >= event!.max_capacity) {
+        throw new Error('Este evento está lotado');
+      }
+
       const { data, error } = await supabase
         .from('attendance')
         .insert({ user_id: user.id, event_id: event!.id })
         .select()
         .single();
 
-      if (error) throw new Error(`Failed to join event: ${error.message}`);
+      if (error) throw new Error(`Falha ao participar do evento: ${error.message}`);
       return data;
     },
     onSuccess: () => {
-      // Invalidate attendance query to refetch
+      // Invalidate attendance and count queries to refetch
       queryClient.invalidateQueries({ queryKey: ['attendance', eventId, user.id] });
+      queryClient.invalidateQueries({ queryKey: ['attendeeCount', eventId] });
+    },
+    onError: (error: Error) => {
+      Alert.alert('Não foi possível participar', error.message);
     },
   });
+
+  // Real-time subscription for attendance changes
+  useEffect(() => {
+    if (!eventId) return;
+
+    const channel = supabase
+      .channel(`attendance:${eventId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'attendance',
+          filter: `event_id=eq.${eventId}`,
+        },
+        (payload) => {
+          console.log('New attendee joined:', payload);
+          // Invalidate to refetch attendance count
+          queryClient.invalidateQueries({ queryKey: ['attendeeCount', eventId] });
+
+          // If it's the current user, update their attendance status
+          if (payload.new.user_id === user?.id) {
+            queryClient.invalidateQueries({ queryKey: ['attendance', eventId, user.id] });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'attendance',
+          filter: `event_id=eq.${eventId}`,
+        },
+        (payload) => {
+          console.log('Attendee left:', payload);
+          queryClient.invalidateQueries({ queryKey: ['attendeeCount', eventId] });
+
+          // If it's the current user, update their attendance status
+          if (payload.old.user_id === user?.id) {
+            queryClient.invalidateQueries({ queryKey: ['attendance', eventId, user.id] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [eventId, queryClient, user?.id]);
 
   const isLoading = eventLoading || attendanceLoading;
 
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
-        <ActivityIndicator size="large" color="#14b8a1" />
-        <Text className="mt-4 text-base font-medium text-dark-700">Loading event...</Text>
+        <ActivityIndicator size="large" color="#1DDD96" />
+        <Text className="mt-4 text-base font-medium text-dark-700">Carregando evento...</Text>
       </View>
     );
   }
@@ -95,7 +172,7 @@ export default function EventPage() {
     return (
       <View className="flex-1 items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
         <View className="mx-4 rounded-3xl bg-white/90 p-6">
-          <Text className="text-center text-lg font-semibold text-red-600">Event not found</Text>
+          <Text className="text-center text-lg font-semibold text-red-600">Evento não encontrado</Text>
         </View>
       </View>
     );
@@ -141,6 +218,19 @@ export default function EventPage() {
             </View>
           </MotiView>
 
+          {/* Women Only Badge */}
+          {event.women_only && (
+            <MotiView
+              from={{ opacity: 0, translateX: 20 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ type: 'spring', delay: 250 }}
+              style={styles.womenOnlyBadge}>
+              <View className="rounded-full bg-pink-500/95 px-5 py-2.5">
+                <Text className="text-center text-sm font-bold text-white">Exclusivo para Mulheres</Text>
+              </View>
+            </MotiView>
+          )}
+
           {/* Title on Hero */}
           <MotiView
             from={{ opacity: 0, translateY: 20 }}
@@ -152,7 +242,7 @@ export default function EventPage() {
         </View>
 
         {/* Info Cards */}
-        <View className="px-4" style={{ marginTop: -40 }}>
+        <View className="px-4" style={{ marginTop: 20 }}>
           {/* Time & Location Card */}
           <MotiView
             from={{ opacity: 0, scale: 0.9 }}
@@ -163,23 +253,37 @@ export default function EventPage() {
             <View className="p-5">
               <View className="mb-4 flex-row items-center gap-3 border-b border-dark-100 pb-4">
                 <View className="h-12 w-12 items-center justify-center rounded-2xl bg-brand-100">
-                  <Feather name="clock" size={24} color="#14b8a1" />
+                  <Feather name="clock" size={24} color="#1DDD96" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-medium text-dark-500">Time</Text>
+                  <Text className="text-sm font-medium text-dark-500">Horário</Text>
                   <Text className="text-lg font-bold text-dark-900">
                     {dayjs(event.date).format('h:mm A')}
                   </Text>
                 </View>
               </View>
 
-              <View className="flex-row items-center gap-3">
+              <View className="mb-4 flex-row items-center gap-3 border-b border-dark-100 pb-4">
                 <View className="h-12 w-12 items-center justify-center rounded-2xl bg-brand-100">
-                  <Feather name="map-pin" size={24} color="#14b8a1" />
+                  <Feather name="map-pin" size={24} color="#1DDD96" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-medium text-dark-500">Location</Text>
+                  <Text className="text-sm font-medium text-dark-500">Localização</Text>
                   <Text className="text-lg font-bold text-dark-900">{event.location}</Text>
+                </View>
+              </View>
+
+              <View className="flex-row items-center gap-3">
+                <View className="h-12 w-12 items-center justify-center rounded-2xl bg-brand-100">
+                  <Feather name="users" size={24} color="#1DDD96" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-medium text-dark-500">Participantes</Text>
+                  <Text className="text-lg font-bold text-dark-900">
+                    {event.max_capacity
+                      ? `${attendeeCount}/${event.max_capacity} vagas`
+                      : `${attendeeCount} confirmados • Ilimitado`}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -193,15 +297,15 @@ export default function EventPage() {
             className="mb-4 overflow-hidden rounded-3xl bg-white"
             style={styles.card}>
             <View className="p-5">
-              <Text className="mb-3 text-xl font-bold text-dark-900">About</Text>
+              <Text className="mb-3 text-xl font-bold text-dark-900">Sobre</Text>
               <Text className="text-base leading-6 text-dark-700">{event.description}</Text>
 
               <Link
                 href={`/event/${event.id}/attendance`}
                 className="mt-4 text-base font-semibold text-brand-600">
                 <View className="flex-row items-center gap-2">
-                  <Feather name="users" size={18} color="#14b8a1" />
-                  <Text className="text-base font-semibold text-brand-600">View attendance</Text>
+                  <Feather name="users" size={18} color="#1DDD96" />
+                  <Text className="text-base font-semibold text-brand-600">Ver participantes</Text>
                 </View>
               </Link>
             </View>
@@ -223,18 +327,22 @@ export default function EventPage() {
       <View style={styles.footer}>
         <View className="flex-row items-center justify-between px-6 py-4">
           <View>
-            <Text className="text-sm font-medium text-dark-600">Price</Text>
-            <Text className="text-2xl font-bold text-dark-900">Free</Text>
+            <Text className="text-sm font-medium text-dark-600">Preço</Text>
+            <Text className="text-2xl font-bold text-dark-900">Grátis</Text>
           </View>
 
           {attendance ? (
             <View className="flex-row items-center gap-2 rounded-3xl bg-green-50 px-6 py-4">
               <Feather name="check-circle" size={24} color="#10b981" />
-              <Text className="text-base font-bold text-green-700">Attending</Text>
+              <Text className="text-base font-bold text-green-700">Participando</Text>
+            </View>
+          ) : event.max_capacity && attendeeCount >= event.max_capacity ? (
+            <View className="rounded-3xl bg-dark-200 px-6 py-4">
+              <Text className="text-base font-bold text-dark-600">Evento Lotado</Text>
             </View>
           ) : (
             <GradientButton
-              title={joinEventMutation.isPending ? 'Joining...' : 'Join Event'}
+              title={joinEventMutation.isPending ? 'Participando...' : 'Participar do Evento'}
               onPress={() => joinEventMutation.mutate()}
               disabled={joinEventMutation.isPending}
               variant="teal"
@@ -261,8 +369,13 @@ const styles = StyleSheet.create({
   },
   dateBadge: {
     position: 'absolute',
-    top: 100,
+    top: 120,
     right: 20,
+  },
+  womenOnlyBadge: {
+    position: 'absolute',
+    top: 120,
+    left: 20,
   },
   titleContainer: {
     position: 'absolute',
