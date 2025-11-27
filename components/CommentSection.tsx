@@ -1,14 +1,16 @@
+import Feather from '@expo/vector-icons/Feather';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useState, useEffect } from 'react';
-import { Text, View, TextInput, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { Text, View, TextInput, Pressable, ActivityIndicator, Alert, Modal } from 'react-native';
 
 import AvatarReadOnly from '~/components/AvatarReadOnly';
 import { useAuth } from '~/contexts/AuthProvider';
 import { CommentWithProfile } from '~/types/db';
+import { scheduleCommentNotification } from '~/utils/notifications';
 import { supabase } from '~/utils/supabase';
 
 dayjs.extend(relativeTime);
@@ -63,6 +65,9 @@ export default function CommentSection({ eventId }: CommentSectionProps) {
   const [commentText, setCommentText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [editingComment, setEditingComment] = useState<{ id: number; content: string } | null>(
+    null
+  );
 
   const {
     data: comments,
@@ -96,10 +101,62 @@ export default function CommentSection({ eventId }: CommentSectionProps) {
       if (error) throw new Error(`Failed to post comment: ${error.message}`);
       return data as CommentWithProfile;
     },
-    onSuccess: () => {
+    onSuccess: async (commentData) => {
       queryClient.invalidateQueries({ queryKey: ['comments', eventId] });
       setCommentText('');
       setSelectedImage(null);
+
+      // Get event details to notify creator
+      const { data: event } = await supabase
+        .from('events')
+        .select('title, user_id')
+        .eq('id', eventId)
+        .single();
+
+      // Get commenter profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user!.id)
+        .single();
+
+      // Notify event creator (only if commenter is not the creator)
+      if (event && event.user_id !== user!.id) {
+        await scheduleCommentNotification(
+          event.title,
+          eventId.toString(),
+          profile?.username || 'Alguém',
+          commentData.content || 'Enviou uma imagem'
+        );
+      }
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      const { error } = await supabase.from('comments').delete().eq('id', commentId);
+
+      if (error) throw new Error(`Failed to delete comment: ${error.message}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', eventId] });
+    },
+    onError: (error: Error) => {
+      Alert.alert('Erro ao excluir', error.message);
+    },
+  });
+
+  const updateCommentMutation = useMutation({
+    mutationFn: async ({ commentId, content }: { commentId: number; content: string }) => {
+      const { error } = await supabase.from('comments').update({ content }).eq('id', commentId);
+
+      if (error) throw new Error(`Failed to update comment: ${error.message}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', eventId] });
+    },
+    onError: (error: Error) => {
+      Alert.alert('Erro ao editar', error.message);
     },
   });
 
@@ -260,6 +317,35 @@ export default function CommentSection({ eventId }: CommentSectionProps) {
     }
   };
 
+  const handleDeleteComment = (commentId: number) => {
+    Alert.alert('Excluir Comentário', 'Tem certeza que deseja excluir este comentário?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: () => deleteCommentMutation.mutate(commentId),
+      },
+    ]);
+  };
+
+  const handleEditComment = (commentId: number, currentContent: string) => {
+    setEditingComment({ id: commentId, content: currentContent });
+  };
+
+  const handleSaveEdit = () => {
+    if (editingComment && editingComment.content.trim()) {
+      updateCommentMutation.mutate({
+        commentId: editingComment.id,
+        content: editingComment.content.trim(),
+      });
+      setEditingComment(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingComment(null);
+  };
+
   if (isLoading) {
     return (
       <View className="items-center justify-center p-5">
@@ -273,13 +359,55 @@ export default function CommentSection({ eventId }: CommentSectionProps) {
 
   return (
     <View className="border-t border-gray-200">
+      {/* Edit Comment Modal */}
+      <Modal
+        visible={editingComment !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCancelEdit}>
+        <View className="flex-1 items-center justify-center bg-black/50">
+          <View className="mx-4 w-full max-w-md rounded-2xl bg-white p-6">
+            <Text className="mb-4 text-xl font-bold text-dark-900">Editar Comentário</Text>
+            <TextInput
+              value={editingComment?.content || ''}
+              onChangeText={(text) =>
+                setEditingComment(editingComment ? { ...editingComment, content: text } : null)
+              }
+              placeholder="Digite o novo texto do comentário"
+              multiline
+              numberOfLines={4}
+              maxLength={500}
+              className="mb-4 rounded-lg border border-gray-300 bg-white p-3 text-base"
+              textAlignVertical="top"
+            />
+            <View className="flex-row gap-3">
+              <Pressable onPress={handleCancelEdit} className="flex-1 rounded-lg bg-gray-200 p-3">
+                <Text className="text-center font-semibold text-gray-700">Cancelar</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleSaveEdit}
+                disabled={!editingComment?.content.trim() || updateCommentMutation.isPending}
+                className={`flex-1 rounded-lg p-3 ${
+                  !editingComment?.content.trim() || updateCommentMutation.isPending
+                    ? 'bg-gray-300'
+                    : 'bg-blue-500'
+                }`}>
+                <Text className="text-center font-semibold text-white">
+                  {updateCommentMutation.isPending ? 'Salvando...' : 'Salvar'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Comment Input */}
       <View className="border-b border-gray-200 bg-white p-3">
         <Text className="mb-2 text-lg font-bold">Comments</Text>
 
         {/* Image Preview */}
         {selectedImage && (
-          <View className="mb-2 relative">
+          <View className="relative mb-2">
             <Image
               source={{ uri: selectedImage }}
               style={{ width: '100%', height: 200, borderRadius: 8 }}
@@ -288,7 +416,7 @@ export default function CommentSection({ eventId }: CommentSectionProps) {
             <Pressable
               onPress={handleRemoveImage}
               className="absolute right-2 top-2 rounded-full bg-red-500 p-2">
-              <Text className="text-white font-bold">✕</Text>
+              <Text className="font-bold text-white">✕</Text>
             </Pressable>
           </View>
         )}
@@ -312,12 +440,24 @@ export default function CommentSection({ eventId }: CommentSectionProps) {
           </Pressable>
           <Pressable
             onPress={handlePostComment}
-            disabled={(!commentText.trim() && !selectedImage) || isUploadingImage || postCommentMutation.isPending}
+            disabled={
+              (!commentText.trim() && !selectedImage) ||
+              isUploadingImage ||
+              postCommentMutation.isPending
+            }
             className={`rounded-lg p-3 px-5 ${
-              (!commentText.trim() && !selectedImage) || isUploadingImage || postCommentMutation.isPending ? 'bg-gray-300' : 'bg-blue-500'
+              (!commentText.trim() && !selectedImage) ||
+              isUploadingImage ||
+              postCommentMutation.isPending
+                ? 'bg-gray-300'
+                : 'bg-blue-500'
             }`}>
             <Text className="font-semibold text-white">
-              {isUploadingImage ? 'Uploading...' : postCommentMutation.isPending ? 'Posting...' : 'Post'}
+              {isUploadingImage
+                ? 'Uploading...'
+                : postCommentMutation.isPending
+                  ? 'Posting...'
+                  : 'Post'}
             </Text>
           </Pressable>
         </View>
@@ -330,32 +470,56 @@ export default function CommentSection({ eventId }: CommentSectionProps) {
             Failed to load comments. Please check console for details.
           </Text>
         ) : comments && comments.length > 0 ? (
-          comments.map((item) => (
-            <View key={item.id} className="mb-4 flex-row gap-3 border-b border-gray-100 pb-4">
-              <AvatarReadOnly
-                size={40}
-                url={item.profiles?.avatar_url}
-                fallbackText={item.profiles?.username || item.profiles?.id}
-              />
-              <View className="flex-1">
-                <View className="mb-1 flex-row items-center gap-2">
-                  <Text className="font-semibold">
-                    {item.profiles?.username || item.profiles?.id?.slice(0, 8) || 'Anonymous'}
-                  </Text>
-                  <Text className="text-xs text-gray-500">{dayjs(item.created_at).fromNow()}</Text>
+          comments.map((item) => {
+            const isCommentAuthor = item.user_id === user?.id;
+            return (
+              <View key={item.id} className="mb-4 flex-row gap-3 border-b border-gray-100 pb-4">
+                <AvatarReadOnly
+                  size={40}
+                  url={item.profiles?.avatar_url}
+                  fallbackText={item.profiles?.username || item.profiles?.id}
+                />
+                <View className="flex-1">
+                  <View className="mb-1 flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2">
+                      <Text className="font-semibold">
+                        {item.profiles?.username || item.profiles?.id?.slice(0, 8) || 'Anonymous'}
+                      </Text>
+                      <Text className="text-xs text-gray-500">
+                        {dayjs(item.created_at).fromNow()}
+                      </Text>
+                    </View>
+                    {isCommentAuthor && (
+                      <View className="flex-row gap-2">
+                        <Pressable
+                          onPress={() => handleEditComment(item.id, item.content || '')}
+                          className="rounded-full p-1">
+                          <Feather name="edit-2" size={16} color="#64748b" />
+                        </Pressable>
+                        <Pressable
+                          onPress={() => handleDeleteComment(item.id)}
+                          className="rounded-full p-1">
+                          <Feather name="trash-2" size={16} color="#ef4444" />
+                        </Pressable>
+                      </View>
+                    )}
+                  </View>
+                  {item.content && <Text className="mb-2 text-gray-800">{item.content}</Text>}
+                  {item.image_url && (
+                    <Image
+                      source={{
+                        uri: supabase.storage.from('avatars').getPublicUrl(item.image_url).data
+                          .publicUrl,
+                      }}
+                      style={{ width: '100%', height: 200, borderRadius: 8, marginTop: 8 }}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                    />
+                  )}
                 </View>
-                {item.content && <Text className="text-gray-800 mb-2">{item.content}</Text>}
-                {item.image_url && (
-                  <Image
-                    source={{ uri: supabase.storage.from('avatars').getPublicUrl(item.image_url).data.publicUrl }}
-                    style={{ width: '100%', height: 200, borderRadius: 8, marginTop: 8 }}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                  />
-                )}
               </View>
-            </View>
-          ))
+            );
+          })
         ) : (
           <Text className="py-8 text-center text-gray-500">
             No comments yet. Be the first to comment!

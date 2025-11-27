@@ -11,14 +11,34 @@ export default function AuthProvider({ children }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session error:', error);
+        // Clear corrupted session
+        supabase.auth.signOut().catch(e => console.error('Error signing out:', e));
+        setSession(null);
+      } else {
+        setSession(session);
+      }
+      setIsReady(true);
+    }).catch((error) => {
+      // Catch any unhandled promise rejections
+      console.error('Failed to get session:', error);
+      // Clear any corrupted data and sign out
+      supabase.auth.signOut().catch(e => console.error('Error signing out:', e));
+      setSession(null);
       setIsReady(true);
     });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   if (!isReady) {

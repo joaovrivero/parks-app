@@ -79,7 +79,9 @@ export default function Events() {
           <Text className="text-center text-lg font-semibold text-red-600">
             {error?.message || 'Falha ao carregar eventos'}
           </Text>
-          <Text className="mt-2 text-center text-dark-600">Arraste para baixo para tentar novamente</Text>
+          <Text className="mt-2 text-center text-dark-600">
+            Arraste para baixo para tentar novamente
+          </Text>
         </View>
       );
     }

@@ -29,14 +29,16 @@ export default function History() {
           <Text className="text-center text-red-600">
             {error?.message || 'Falha ao carregar histórico de eventos'}
           </Text>
-          <Text className="mt-2 text-center text-gray-600">Arraste para baixo para tentar novamente</Text>
+          <Text className="mt-2 text-center text-gray-600">
+            Arraste para baixo para tentar novamente
+          </Text>
         </View>
       );
     }
 
     return (
-      <View className="flex-1 items-center justify-center py-8 px-6">
-        <Text className="text-center text-xl font-semibold text-gray-700 mb-2">
+      <View className="flex-1 items-center justify-center px-6 py-8">
+        <Text className="mb-2 text-center text-xl font-semibold text-gray-700">
           Nenhum Evento Passado
         </Text>
         <Text className="text-center text-gray-600">
@@ -58,7 +60,11 @@ export default function History() {
         <FlatList
           data={events || []}
           renderItem={({ item, index }) => (
-            <EventListItem event={item} index={index} attendeeCount={attendeeCounts?.[item.id] || 0} />
+            <EventListItem
+              event={item}
+              index={index}
+              attendeeCount={attendeeCounts?.[item.id] || 0}
+            />
           )}
           ListEmptyComponent={renderEmpty}
           refreshControl={
@@ -70,7 +76,11 @@ export default function History() {
             />
           }
           keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={events?.length === 0 ? { flex: 1 } : { paddingBottom: 100, paddingHorizontal: 16, paddingTop: 8 }}
+          contentContainerStyle={
+            events?.length === 0
+              ? { flex: 1 }
+              : { paddingBottom: 100, paddingHorizontal: 16, paddingTop: 8 }
+          }
         />
       </LinearGradient>
     </>

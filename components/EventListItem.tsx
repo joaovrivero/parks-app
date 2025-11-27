@@ -15,7 +15,6 @@ interface EventListItemProps {
 }
 
 export default function EventListItem({ event, index = 0, attendeeCount = 0 }: EventListItemProps) {
-
   return (
     <MotiView
       from={{ opacity: 0, translateY: 20 }}

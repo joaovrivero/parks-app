@@ -1,6 +1,6 @@
 import Mapbox, { Camera, LocationPuck, MapView, ShapeSource, CircleLayer } from '@rnmapbox/maps';
-import { BlurView } from 'expo-blur';
 import { featureCollection, point } from '@turf/helpers';
+import { BlurView } from 'expo-blur';
 import { Stack, router } from 'expo-router';
 import { View, ActivityIndicator, Text, Platform, StyleSheet } from 'react-native';
 
@@ -82,7 +82,9 @@ export default function EventsMapView() {
             </View>
           </BlurView>
         ) : (
-          <View className="rounded-3xl border border-white/30 bg-white/90 p-4" style={styles.glassCard}>
+          <View
+            className="rounded-3xl border border-white/30 bg-white/90 p-4"
+            style={styles.glassCard}>
             <Text className="text-2xl font-bold text-dark-900">{events.length}</Text>
             <Text className="text-sm font-medium text-dark-600">Eventos Próximos</Text>
           </View>

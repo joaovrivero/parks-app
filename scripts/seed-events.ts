@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../types/supabase';
+import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as dotenv from 'dotenv';
+
+import { Database } from '../types/supabase';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -19,7 +20,7 @@ const rsLocations = [
   { lat: -30.0277, lng: -51.2287, name: 'Parque Moinhos de Vento (Parcão), Porto Alegre - RS' },
   { lat: -30.0494, lng: -51.1773, name: 'Parque Germânia, Porto Alegre - RS' },
   { lat: -30.1088, lng: -51.3089, name: 'Parque Natural Morro do Osso, Porto Alegre - RS' },
-  { lat: -30.0878, lng: -51.2350, name: 'Parque Maurício Sirotsky Sobrinho, Porto Alegre - RS' },
+  { lat: -30.0878, lng: -51.235, name: 'Parque Maurício Sirotsky Sobrinho, Porto Alegre - RS' },
   { lat: -29.9945, lng: -51.1821, name: 'Parque Saint Hilaire, Porto Alegre - RS' },
   { lat: -30.1156, lng: -51.2897, name: 'Parque Mascarenhas de Moraes, Porto Alegre - RS' },
   { lat: -30.0234, lng: -51.1678, name: 'Parque da Harmonia, Porto Alegre - RS' },
@@ -74,7 +75,8 @@ const events = [
   },
   {
     title: 'Treino Funcional ao Ar Livre',
-    description: 'Exercícios funcionais para fortalecer o corpo todo. Sem equipamentos necessários!',
+    description:
+      'Exercícios funcionais para fortalecer o corpo todo. Sem equipamentos necessários!',
     date: new Date('2026-01-17T07:00:00-03:00').toISOString(),
     max_capacity: 45,
     women_only: false,
@@ -109,7 +111,8 @@ const events = [
   },
   {
     title: 'Aula de Dança ao Ar Livre',
-    description: 'Ritmos variados para se divertir e fazer exercício. Nenhuma experiência necessária!',
+    description:
+      'Ritmos variados para se divertir e fazer exercício. Nenhuma experiência necessária!',
     date: new Date('2026-01-28T18:00:00-03:00').toISOString(),
     max_capacity: 40,
     women_only: false,
@@ -137,7 +140,8 @@ const events = [
   },
   {
     title: 'Sessão de Pintura ao Ar Livre',
-    description: 'Traga seus materiais de arte e pinte a paisagem. Aquarela, acrílico, o que preferir!',
+    description:
+      'Traga seus materiais de arte e pinte a paisagem. Aquarela, acrílico, o que preferir!',
     date: new Date('2026-02-07T15:00:00-03:00').toISOString(),
     max_capacity: 20,
     women_only: false,

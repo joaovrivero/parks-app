@@ -5,6 +5,12 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Montserrat_400Regular'],
+        medium: ['Montserrat_500Medium'],
+        semibold: ['Montserrat_600SemiBold'],
+        bold: ['Montserrat_700Bold'],
+      },
       colors: {
         brand: {
           50: '#e6faf3',
@@ -56,9 +62,9 @@ module.exports = {
         '4xl': '2rem',
       },
       boxShadow: {
-        'soft': '0 2px 15px rgba(0, 0, 0, 0.08)',
+        soft: '0 2px 15px rgba(0, 0, 0, 0.08)',
         'soft-lg': '0 10px 40px rgba(0, 0, 0, 0.12)',
-        'glow': '0 0 20px rgba(29, 221, 150, 0.3)',
+        glow: '0 0 20px rgba(29, 221, 150, 0.3)',
         'glow-lg': '0 0 40px rgba(29, 221, 150, 0.4)',
       },
       elevation: {

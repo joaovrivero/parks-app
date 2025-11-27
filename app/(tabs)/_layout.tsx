@@ -1,6 +1,9 @@
 import { BlurView } from 'expo-blur';
 import { Redirect, Tabs } from 'expo-router';
 import { Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect } from 'react';
+import * as SystemUI from 'expo-system-ui';
 
 import { TabBarIcon } from '../../components/TabBarIcon';
 
@@ -8,6 +11,18 @@ import { useAuth } from '~/contexts/AuthProvider';
 
 export default function TabLayout() {
   const { isAuthenticated } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    const setupSystemUI = async () => {
+      if (Platform.OS === 'android') {
+        // Set navigation bar color to match tab bar (Android only)
+        await SystemUI.setBackgroundColorAsync('#293430');
+      }
+    };
+
+    setupSystemUI();
+  }, []);
 
   if (!isAuthenticated) {
     return <Redirect href="/login" />;
@@ -22,8 +37,8 @@ export default function TabLayout() {
           position: 'absolute',
           backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(41, 52, 48, 0.95)',
           borderTopWidth: 0,
-          height: 85,
-          paddingBottom: 24,
+          height: 72 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
           paddingTop: 12,
           elevation: 0,
           shadowColor: '#000',
@@ -41,12 +56,7 @@ export default function TabLayout() {
             <BlurView
               intensity={90}
               tint="dark"
-              style={{
-                ...StyleSheet.absoluteFillObject,
-                overflow: 'hidden',
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-              }}
+              style={StyleSheet.absoluteFillObject}
             />
           ) : null,
         headerStyle: {

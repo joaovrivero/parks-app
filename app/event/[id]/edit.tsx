@@ -1,8 +1,9 @@
 import Feather from '@expo/vector-icons/Feather';
+import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { MotiView } from 'moti';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Text,
   View,
@@ -13,6 +14,7 @@ import {
   Switch,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 
@@ -22,11 +24,27 @@ import Avatar from '~/components/Avatar';
 import GradientButton from '~/components/GradientButton';
 import { useAuth } from '~/contexts/AuthProvider';
 import { queryClient } from '~/contexts/QueryProvider';
+import { Event } from '~/types/db';
 import { supabase } from '~/utils/supabase';
 
-export default function CreateEvent() {
-  const [open, setOpen] = useState(false);
+const fetchEvent = async (eventId: string): Promise<Event> => {
+  const { data, error } = await supabase.from('events').select('*').eq('id', eventId).single();
+  if (error) throw new Error(`Failed to fetch event: ${error.message}`);
+  return data;
+};
 
+export default function EditEvent() {
+  const { id } = useLocalSearchParams();
+  const eventId = Array.isArray(id) ? id[0] : id;
+  const { user } = useAuth();
+
+  const { data: event, isLoading: eventLoading } = useQuery({
+    queryKey: ['event', eventId],
+    queryFn: () => fetchEvent(eventId),
+    enabled: !!eventId,
+  });
+
+  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date());
@@ -35,14 +53,34 @@ export default function CreateEvent() {
   const [maxCapacity, setMaxCapacity] = useState('');
   const [isUnlimited, setIsUnlimited] = useState(true);
   const [womenOnly, setWomenOnly] = useState(false);
-
   const [loading, setLoading] = useState(false);
 
-  const { user } = useAuth();
+  // Populate form when event data is loaded
+  useEffect(() => {
+    if (event) {
+      // Check if user is the creator
+      if (event.user_id !== user?.id) {
+        Alert.alert('Acesso Negado', 'Você não tem permissão para editar este evento');
+        router.back();
+        return;
+      }
 
-  const createEvent = async () => {
-    if (!title || !description || !location) {
-      Alert.alert('Informação Faltando', 'Por favor, preencha todos os campos');
+      setTitle(event.title);
+      setDescription(event.description);
+      setDate(new Date(event.date));
+      setImageUrl(event.image_uri || '');
+      setMaxCapacity(event.max_capacity ? String(event.max_capacity) : '');
+      setIsUnlimited(!event.max_capacity);
+      setWomenOnly(event.women_only || false);
+
+      // Note: We can't perfectly restore the location object from just the location string
+      // The user will need to re-select if they want to change it
+    }
+  }, [event, user]);
+
+  const updateEvent = async () => {
+    if (!title || !description) {
+      Alert.alert('Informação Faltando', 'Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
@@ -54,48 +92,60 @@ export default function CreateEvent() {
 
     setLoading(true);
 
-    const long = location.features[0].geometry.coordinates[0];
-    const lat = location.features[0].geometry.coordinates[1];
+    const updates: any = {
+      title,
+      description,
+      date: date.toISOString(),
+      image_uri: imageUrl,
+      max_capacity: isUnlimited ? null : parseInt(maxCapacity),
+      women_only: womenOnly,
+    };
 
-    const { data, error } = await supabase
-      .from('events')
-      .insert([
-        {
-          title,
-          description,
-          date: date.toISOString(),
-          user_id: user.id,
-          image_uri: imageUrl,
-          location: location.features[0].properties.name,
-          location_point: `POINT(${long} ${lat})`,
-          max_capacity: isUnlimited ? null : parseInt(maxCapacity),
-          women_only: womenOnly,
-        },
-      ])
-      .select()
-      .single();
+    // Only update location if a new one was selected
+    if (location) {
+      const long = location.features[0].geometry.coordinates[0];
+      const lat = location.features[0].geometry.coordinates[1];
+      updates.location = location.features[0].properties.name;
+      updates.location_point = `POINT(${long} ${lat})`;
+    }
+
+    const { error } = await supabase.from('events').update(updates).eq('id', eventId);
 
     if (error) {
-      Alert.alert('Falha ao criar o evento', error.message);
+      Alert.alert('Falha ao atualizar o evento', error.message);
     } else {
-      // Invalidate events query to refresh map and feed
+      // Invalidate events query to refresh data
       queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['event', eventId] });
 
-      setTitle('');
-      setDescription('');
-      setDate(new Date());
-      setMaxCapacity('');
-      setIsUnlimited(true);
-      setWomenOnly(false);
-      router.push(`/event/${data.id}`);
+      Alert.alert('Sucesso', 'Evento atualizado com sucesso', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
     }
 
     setLoading(false);
   };
 
+  if (eventLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
+        <ActivityIndicator size="large" color="#1DDD96" />
+        <Text className="mt-4 text-base font-medium text-dark-700">Carregando evento...</Text>
+      </View>
+    );
+  }
+
+  if (!event) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
+        <Text className="text-lg font-semibold text-red-600">Evento não encontrado</Text>
+      </View>
+    );
+  }
+
   return (
     <>
-      <Stack.Screen options={{ title: 'Criar Evento', headerShown: false }} />
+      <Stack.Screen options={{ title: 'Editar Evento', headerBackTitleVisible: false }} />
 
       <LinearGradient
         colors={['#e6faf3', '#b3f0d9', '#f8fafc']}
@@ -117,8 +167,8 @@ export default function CreateEvent() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ type: 'spring', delay: 100 }}
               className="mb-8">
-              <Text className="mb-2 text-3xl font-bold text-dark-900">Criar Evento</Text>
-              <Text className="text-base text-dark-600">Compartilhe sua aventura ao ar livre</Text>
+              <Text className="mb-2 text-3xl font-bold text-dark-900">Editar Evento</Text>
+              <Text className="text-base text-dark-600">Atualize os detalhes do seu evento</Text>
             </MotiView>
 
             {/* Image Upload */}
@@ -188,7 +238,11 @@ export default function CreateEvent() {
                 {/* Location */}
                 <View>
                   <Text className="mb-2 text-sm font-semibold text-dark-700">Localização</Text>
-                  <AddressAutocomplete onSelected={(location) => setLocation(location)} />
+                  <Text className="mb-2 text-sm text-dark-600">Atual: {event.location}</Text>
+                  <AddressAutocomplete
+                    onSelected={(location) => setLocation(location)}
+                    placeholder="Selecione nova localização (opcional)"
+                  />
                 </View>
 
                 {/* Participant Capacity */}
@@ -257,14 +311,14 @@ export default function CreateEvent() {
               }}
             />
 
-            {/* Create Button */}
+            {/* Update Button */}
             <MotiView
               from={{ opacity: 0, translateY: 20 }}
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ type: 'spring', delay: 400 }}>
               <GradientButton
-                title={loading ? 'Criando...' : 'Criar Evento'}
-                onPress={createEvent}
+                title={loading ? 'Salvando...' : 'Salvar Alterações'}
+                onPress={updateEvent}
                 disabled={loading}
                 variant="teal"
                 size="lg"

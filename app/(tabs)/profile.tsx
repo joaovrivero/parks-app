@@ -1,7 +1,16 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Button, Pressable, TextInput, View, Text, ScrollView, StyleSheet } from 'react-native';
+import {
+  Alert,
+  Button,
+  Pressable,
+  TextInput,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+} from 'react-native';
 
 import Avatar from '~/components/Avatar';
 import { useAuth } from '~/contexts/AuthProvider';
@@ -94,82 +103,87 @@ export default function Profile() {
         style={styles.container}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}>
-        <ScrollView className="flex-1" contentContainerClassName="p-6" contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }}>
-        {/* Profile Header Card */}
-        <View className="mb-6 items-center rounded-2xl bg-white p-6 shadow-sm">
-          <Avatar
-            size={120}
-            url={avatarUrl || null}
-            onUpload={(url: string) => {
-              setAvatarUrl(url);
-              updateProfile({ username, avatar_url: url, full_name: fullName });
-            }}
-          />
-          <View className="mt-4 items-center">
-            <Text className="text-xl font-bold text-dark-800">
-              {fullName || username || 'Seu Nome'}
-            </Text>
-            <Text className="text-dark-500">{session?.user?.email}</Text>
-          </View>
-        </View>
-
-        {/* Personal Information Card */}
-        <View className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
-          <Text className="mb-4 text-lg font-semibold text-dark-800">Informações Pessoais</Text>
-
-          <View className="gap-4">
-            <View>
-              <Text className="mb-2 text-sm font-medium text-dark-700">Email</Text>
-              <TextInput
-                editable={false}
-                value={session?.user?.email}
-                placeholder="email"
-                autoCapitalize="none"
-                className="rounded-xl border border-dark-200 bg-dark-50 p-4 text-dark-500"
-              />
-            </View>
-
-            <View>
-              <Text className="mb-2 text-sm font-medium text-dark-700">Nome Completo</Text>
-              <TextInput
-                onChangeText={(text) => setFullName(text)}
-                value={fullName}
-                placeholder="Digite seu nome completo"
-                autoCapitalize="words"
-                className="rounded-xl border border-dark-200 bg-white p-4 text-dark-800 focus:border-brand-500"
-              />
-            </View>
-
-            <View>
-              <Text className="mb-2 text-sm font-medium text-dark-700">Nome de Usuário</Text>
-              <TextInput
-                onChangeText={(text) => setUsername(text)}
-                value={username}
-                placeholder="Escolha um nome de usuário"
-                autoCapitalize="none"
-                className="rounded-xl border border-dark-200 bg-white p-4 text-dark-800 focus:border-brand-500"
-              />
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="p-6"
+          contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }}>
+          {/* Profile Header Card */}
+          <View className="mb-6 items-center rounded-2xl bg-white p-6 shadow-sm">
+            <Avatar
+              size={120}
+              url={avatarUrl || null}
+              onUpload={(url: string) => {
+                setAvatarUrl(url);
+                updateProfile({ username, avatar_url: url, full_name: fullName });
+              }}
+            />
+            <View className="mt-4 items-center">
+              <Text className="text-xl font-bold text-dark-800">
+                {fullName || username || 'Seu Nome'}
+              </Text>
+              <Text className="text-dark-500">{session?.user?.email}</Text>
             </View>
           </View>
-        </View>
 
-        {/* Action Buttons */}
-        <View className="mb-6 gap-3">
-          <Pressable
-            onPress={() => updateProfile({ username, avatar_url: avatarUrl, full_name: fullName })}
-            disabled={loading}
-            className="items-center rounded-xl bg-brand-500 p-4 shadow-md disabled:opacity-50">
-            <Text className="text-lg font-semibold text-white">
-              {loading ? 'Salvando...' : 'Salvar Alterações'}
-            </Text>
-          </Pressable>
+          {/* Personal Information Card */}
+          <View className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
+            <Text className="mb-4 text-lg font-semibold text-dark-800">Informações Pessoais</Text>
 
-          <Pressable
-            onPress={() => supabase.auth.signOut()}
-            className="items-center rounded-xl border-2 border-dark-300 bg-white p-4">
-            <Text className="text-lg font-semibold text-dark-700">Sair</Text>
-          </Pressable>
-        </View>
+            <View className="gap-4">
+              <View>
+                <Text className="mb-2 text-sm font-medium text-dark-700">Email</Text>
+                <TextInput
+                  editable={false}
+                  value={session?.user?.email}
+                  placeholder="email"
+                  autoCapitalize="none"
+                  className="rounded-xl border border-dark-200 bg-dark-50 p-4 text-dark-500"
+                />
+              </View>
+
+              <View>
+                <Text className="mb-2 text-sm font-medium text-dark-700">Nome Completo</Text>
+                <TextInput
+                  onChangeText={(text) => setFullName(text)}
+                  value={fullName}
+                  placeholder="Digite seu nome completo"
+                  autoCapitalize="words"
+                  className="rounded-xl border border-dark-200 bg-white p-4 text-dark-800 focus:border-brand-500"
+                />
+              </View>
+
+              <View>
+                <Text className="mb-2 text-sm font-medium text-dark-700">Nome de Usuário</Text>
+                <TextInput
+                  onChangeText={(text) => setUsername(text)}
+                  value={username}
+                  placeholder="Escolha um nome de usuário"
+                  autoCapitalize="none"
+                  className="rounded-xl border border-dark-200 bg-white p-4 text-dark-800 focus:border-brand-500"
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View className="mb-6 gap-3">
+            <Pressable
+              onPress={() =>
+                updateProfile({ username, avatar_url: avatarUrl, full_name: fullName })
+              }
+              disabled={loading}
+              className="items-center rounded-xl bg-brand-500 p-4 shadow-md disabled:opacity-50">
+              <Text className="text-lg font-semibold text-white">
+                {loading ? 'Salvando...' : 'Salvar Alterações'}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => supabase.auth.signOut()}
+              className="items-center rounded-xl border-2 border-dark-300 bg-white p-4">
+              <Text className="text-lg font-semibold text-dark-700">Sair</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </LinearGradient>
     </View>
