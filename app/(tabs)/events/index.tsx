@@ -104,7 +104,7 @@ export default function Events() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Eventos', headerShown: false }} />
+      <Stack.Screen options={{ title: 'Events', headerShown: false }} />
 
       <LinearGradient
         colors={['#e6faf3', '#b3f0d9', '#f8fafc']}

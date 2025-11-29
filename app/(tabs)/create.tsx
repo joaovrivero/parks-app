@@ -95,7 +95,7 @@ export default function CreateEvent() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Criar Evento', headerShown: false }} />
+      <Stack.Screen options={{ title: 'Create', headerShown: false }} />
 
       <LinearGradient
         colors={['#e6faf3', '#b3f0d9', '#f8fafc']}

@@ -50,7 +50,7 @@ export default function History() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Histórico de Eventos', headerShown: false }} />
+      <Stack.Screen options={{ title: 'History', headerShown: false }} />
 
       <LinearGradient
         colors={['#e6faf3', '#b3f0d9', '#f8fafc']}

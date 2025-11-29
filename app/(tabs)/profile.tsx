@@ -96,7 +96,7 @@ export default function Profile() {
 
   return (
     <View className="flex-1">
-      <Stack.Screen options={{ title: 'Perfil', headerShown: false }} />
+      <Stack.Screen options={{ title: 'Profile', headerShown: false }} />
 
       <LinearGradient
         colors={['#e6faf3', '#b3f0d9', '#f8fafc']}

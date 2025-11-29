@@ -18,7 +18,7 @@ export default function EventsMapView() {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
-        <Stack.Screen options={{ title: 'Mapa', headerShown: false }} />
+        <Stack.Screen options={{ title: 'Map', headerShown: false }} />
         <ActivityIndicator size="large" color="#1DDD96" />
         <Text className="mt-4 text-base font-medium text-dark-700">Carregando mapa...</Text>
       </View>
@@ -28,7 +28,7 @@ export default function EventsMapView() {
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
-        <Stack.Screen options={{ title: 'Mapa', headerShown: false }} />
+        <Stack.Screen options={{ title: 'Map', headerShown: false }} />
         <View className="mx-4 rounded-3xl bg-white/90 p-6">
           <Text className="text-center text-lg font-semibold text-red-600">
             {error?.message || 'Falha ao carregar eventos'}
@@ -40,7 +40,7 @@ export default function EventsMapView() {
 
   return (
     <View className="flex-1">
-      <Stack.Screen options={{ title: 'Mapa', headerShown: false }} />
+      <Stack.Screen options={{ title: 'Map', headerShown: false }} />
       <MapView style={{ height: '100%' }}>
         <Camera followZoomLevel={14} followUserLocation />
         <LocationPuck

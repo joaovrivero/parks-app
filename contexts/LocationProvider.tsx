@@ -31,8 +31,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
     if (status) {
       setHasPermission(status.granted);
       setIsLoading(false);
+
+      // Auto-request permission on first launch
+      if (!status.granted && status.canAskAgain) {
+        requestPermissionInternal();
+      }
     }
-  }, [status]);
+  }, [status, requestPermissionInternal]);
 
   useEffect(() => {
     (async () => {
